@@ -1,0 +1,101 @@
+--
+# Create a new VM on an ESX server
+# Returns changed = False when the VM already exists
+# Returns changed = True and a adds ansible_facts from the new VM
+# State will set the power status of a guest upon creation. Use powered_on to create and boot.
+# Options ['state', 'vm_extra_config', 'vm_disk', 'vm_nic', 'vm_hardware', 'esxi'] are required together
+# Note: vm_floppy support added in 2.0
+
+- vsphere_guest:
+    vcenter_hostname: esx55.softservecom.com
+    username: ykerytc
+    password: D^QuO~O-
+    guest: newvm001
+    state: powered_on
+    vm_extra_config:
+      vcpu.hotadd: yes
+      mem.hotadd:  yes
+      notes: This is a test VM
+      folder: MyFolder
+    vm_disk:
+      disk1:
+        size_gb: 10
+        type: thin
+        datastore: lv4-st5_RAID5_LUN_ProjSupport
+        folder: CentOS7
+    vm_nic:
+      nic1:
+        type: vmxnet3
+        network: vsw-TRAIN-SRV
+        network_type: standard
+      nic2:
+        type: vmxnet2
+        network: vsw-TRAIN-SRV
+        network_type: dvs
+    vm_hardware:
+      memory_mb: 2048
+      num_cpus: 2
+      osid: centos64Guest
+      scsi: paravirtual
+      vm_cdrom:
+        type: "iso"
+        iso_path: "http://centos.ip-connect.vn.ua/7.6.1810/isos/x86_64/CentOS-7-x86_64-Minimal-1810.iso"
+    esxi:
+      datacenter: esx55.softservecom.com
+      hostname: esx55.softservecom.com
+  delegate_to: esx55.softservecom.com
+
+# Deploy a guest from a template
+- vsphere_guest:
+    vcenter_hostname: esx55.softservecom.com
+    username: ykerytc
+    password: D^QuO~O-
+    guest: ykerytc
+    from_template: yes
+    template_src: lv4-st5_RAID5_LUN_ProjSupport/cent os full/
+    cluster: MainCluster
+    resource_pool: "/lv4-st5_RAID5_LUN_ProjSupport/cent os full"
+    vm_extra_config:
+      folder: MyFolder
+  delegate_to: localhost
+
+# Task to gather facts from a vSphere cluster only if the system is a VMware guest
+- vsphere_guest:
+    vcenter_hostname: esx55.softservecom.com
+    username: ykerytc
+    password: D^QuO~O-
+    guest: ykerytc
+    vmware_guest_facts: yes
+  delegate_to: localhost
+
+---
+# Typical output of a vsphere_facts run on a guest
+# If vmware tools is not installed, ipaddresses with return None
+
+- hw_eth0:
+  - addresstype: "assigned"
+    label: "vmxnet3"
+    macaddress: "00:22:33:33:44:55"
+    macaddress_dash: "00-22-33-33-44-55"
+    ipaddresses: ['192.168.195.110', '2001:DB8:56ff:feac:4d8a']
+    summary: "VM Network"
+  hw_guest_full_name: "newvm001"
+  hw_guest_id: "rhel6_64Guest"
+  hw_memtotal_mb: 2048
+  hw_name: "centos64Guest"
+  hw_power_status: "POWERED ON"
+  hw_processor_count: 2
+  hw_product_uuid: "ef50bac8-2845-40ff-81d9-675315501dac"
+
+# hw_power_status will be one of the following values:
+#   - POWERED ON
+#   - POWERED OFF
+#   - SUSPENDED
+#   - POWERING ON
+#   - POWERING OFF
+#   - SUSPENDING
+#   - RESETTING
+#   - BLOCKED ON MSG
+#   - REVERTING TO SNAPSHOT
+#   - UNKNOWN
+# as seen in the VMPowerState-Class of PySphere: http://git.io/vlwOq
