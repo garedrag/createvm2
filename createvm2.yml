@@ -1,4 +1,4 @@
---
+---
 # Create a new VM on an ESX server
 # Returns changed = False when the VM already exists
 # Returns changed = True and a adds ansible_facts from the new VM
