@@ -68,7 +68,6 @@
     vmware_guest_facts: yes
   delegate_to: localhost
 
----
 # Typical output of a vsphere_facts run on a guest
 # If vmware tools is not installed, ipaddresses with return None
 
@@ -98,4 +97,3 @@
 #   - BLOCKED ON MSG
 #   - REVERTING TO SNAPSHOT
 #   - UNKNOWN
-# as seen in the VMPowerState-Class of PySphere: http://git.io/vlwOq
